@@ -20,7 +20,7 @@ export function searchGames(
   return fuse
     .search(query, { limit: 10 })
     .filter(({ item }) => {
-      if (!language) return true;
+      if (!language || language === "") return true;
       if (!item.languages) return true; // unknown — include optimistically
       return item.languages.includes(language);
     })

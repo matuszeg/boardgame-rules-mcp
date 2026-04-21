@@ -73,4 +73,12 @@ describe("searchGames with language filter", () => {
     const results = searchGames(games, "Catan", "de");
     expect(results).toHaveLength(1);
   });
+
+  it("treats empty string language as no filter", () => {
+    const games: GameEntry[] = [
+      { id: "catan", title: "Catan", slug: "/catan", languages: ["en", "fr"] },
+    ];
+    const results = searchGames(games, "Catan", "");
+    expect(results).toHaveLength(1);
+  });
 });
