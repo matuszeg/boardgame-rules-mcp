@@ -3,8 +3,6 @@ import Ajv2020 from "ajv/dist/2020.js";
 import { summaryPath, isCacheFileStale, ensureDirs } from "./cache.js";
 import { loadSchema } from "./schema.js";
 
-const ajv = new Ajv2020({ strict: false });
-
 export type SummaryResponse =
   | { type: "cached"; data: object }
   | { type: "prompt"; text: string };
@@ -42,6 +40,7 @@ export async function submitRulesSummary(
   data: unknown
 ): Promise<SubmitResult> {
   const schemaDef = await loadSchema(schema);
+  const ajv = new Ajv2020({ strict: false });
   const validate = ajv.compile(schemaDef);
   const valid = validate(data);
 

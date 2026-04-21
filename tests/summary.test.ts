@@ -72,6 +72,9 @@ describe("getRulesSummaryResponse", () => {
       expect(res.text).toContain("Full rulebook text here");
       expect(res.text).toContain("submit_rules_summary");
       expect(res.text).toContain("EXTRACTION SCHEMA");
+      expect(res.text).toContain('"catan"');
+      expect(res.text).toContain('"en"');
+      expect(res.text).toContain('"default"');
     }
   });
 });
