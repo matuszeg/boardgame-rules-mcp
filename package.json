@@ -11,7 +11,8 @@
     "start": "node dist/index.js",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:smoke": "vitest run --config vitest.config.smoke.ts --reporter=verbose"
+    "test:smoke": "vitest run --config vitest.config.smoke.ts --reporter=verbose",
+    "evals": "vitest run --config vitest.config.evals.ts --reporter=verbose"
   },
   "dependencies": {
     "@apidevtools/json-schema-ref-parser": "^15.3.5",
