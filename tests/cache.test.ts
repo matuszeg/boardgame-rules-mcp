@@ -111,6 +111,7 @@ describe("updateGameLanguages", () => {
     };
     const updated = updateGameLanguages(index, "catan", ["en", "fr"]);
     expect(updated.games[0].languages).toEqual(["en", "fr"]);
+    expect(index.games[0].languages).toBeUndefined(); // original not mutated
   });
 
   it("returns index unchanged when game_id is not found", () => {

@@ -11,6 +11,7 @@ const TEXT_DIR = path.join(CACHE_DIR, "text");
 const SUMMARIES_DIR = path.join(CACHE_DIR, "summaries");
 
 const STALE_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+// PDFs and text are cached longer than the index (90 days vs 30 days for the index)
 const DEFAULT_CACHE_MAX_AGE_DAYS = 90;
 
 export interface GameEntry {
