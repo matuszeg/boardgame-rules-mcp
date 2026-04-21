@@ -15,7 +15,7 @@ const FRENCH_LANG_NAME_TO_CODE: Record<string, string> = {
   Portugais: "pt",
 };
 
-function slugToTitle(slug: string): string {
+export function slugToTitle(slug: string): string {
   const name = slug.split("/").pop() ?? slug;
   return name
     .split("-")
@@ -23,7 +23,7 @@ function slugToTitle(slug: string): string {
     .join(" ");
 }
 
-function slugToId(slug: string): string {
+export function slugToId(slug: string): string {
   return slug.split("/").pop() ?? slug;
 }
 
