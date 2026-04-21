@@ -42,7 +42,7 @@ describe("fetchWithRetry", () => {
     expect(mockFetch).toHaveBeenCalledTimes(3);
   });
 
-  it("throws after exhausting all attempts on persistent 5xx", async () => {
+  it("returns last response after exhausting all attempts on persistent 5xx", async () => {
     const mockFetch = vi.fn().mockResolvedValue(new Response("error", { status: 500 }));
     vi.stubGlobal("fetch", mockFetch);
     const res = await fetchWithRetry("https://example.com", undefined, { delays: [0, 0] });

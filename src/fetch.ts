@@ -2,7 +2,7 @@ export interface RetryOptions {
   delays?: number[]; // ms delays between attempts; length = max retries
 }
 
-const DEFAULT_DELAYS = [1000, 2000, 4000];
+const DEFAULT_DELAYS = [1000, 2000];
 
 const RETRYABLE = (status: number) => status >= 500;
 
