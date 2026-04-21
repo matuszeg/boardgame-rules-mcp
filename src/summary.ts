@@ -3,6 +3,8 @@ import Ajv2020 from "ajv/dist/2020.js";
 import { summaryPath, isCacheFileStale, ensureDirs } from "./cache.js";
 import { loadSchema } from "./schema.js";
 
+const MAX_AGE_DAYS = parseInt(process.env["BOARDGAME_CACHE_MAX_AGE_DAYS"] ?? "90", 10) || 90;
+
 export type SummaryResponse =
   | { type: "cached"; data: object }
   | { type: "prompt"; text: string };
@@ -19,7 +21,7 @@ export async function getRulesSummaryResponse(
 ): Promise<SummaryResponse> {
   const cachePath = summaryPath(gameId, language, schema);
 
-  if (!(await isCacheFileStale(cachePath))) {
+  if (!(await isCacheFileStale(cachePath, MAX_AGE_DAYS))) {
     const raw = await fs.readFile(cachePath, "utf-8");
     return { type: "cached", data: JSON.parse(raw) as object };
   }

@@ -8,7 +8,7 @@ export interface RulebookResult {
   text: string;
 }
 
-const MAX_AGE_DAYS = parseInt(process.env["BOARDGAME_CACHE_MAX_AGE_DAYS"] ?? "90", 10);
+const MAX_AGE_DAYS = parseInt(process.env["BOARDGAME_CACHE_MAX_AGE_DAYS"] ?? "90", 10) || 90;
 
 async function downloadPdf(
   pdfUrl: string,
