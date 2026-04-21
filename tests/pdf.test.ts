@@ -26,6 +26,7 @@ const { mockPdfParse } = vi.hoisted(() => {
 vi.mock("pdf-parse", () => ({ default: mockPdfParse }));
 
 import { getRulebook } from "../src/pdf";
+import * as cacheModule from "../src/cache.js";
 
 const PDF_URL = "https://cdn.1j1ju.com/medias/test-en.pdf";
 
@@ -70,5 +71,14 @@ describe("getRulebook", () => {
     await expect(getRulebook(PDF_URL, "catan", "en")).rejects.toThrow(
       PDF_URL
     );
+  });
+});
+
+describe("cache expiration", () => {
+  it("re-downloads PDF if cache file is stale", async () => {
+    vi.spyOn(cacheModule, "isCacheFileStale").mockResolvedValue(true);
+    const fetchSpy = vi.spyOn(global, "fetch");
+    await getRulebook("https://cdn.1j1ju.com/medias/test.pdf", "catan", "en");
+    expect(fetchSpy).toHaveBeenCalled();
   });
 });
