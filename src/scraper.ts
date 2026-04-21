@@ -6,6 +6,7 @@ import { GameEntry, GameIndex } from "./cache.js";
 const BASE_URL = "https://en.1jour-1jeu.com";
 const GAME_PAGE_BASE_URL = "https://www.1jour-1jeu.com";
 
+// Map French language names (used in title attributes on the site) to ISO 639-1 codes
 const FRENCH_LANG_NAME_TO_CODE: Record<string, string> = {
   Français: "fr",
   Anglais: "en",
@@ -56,6 +57,7 @@ async function fetchGamesFromSitemap(url: string): Promise<GameEntry[]> {
     const loc = $(el).text().trim();
     const parsed = new URL(loc);
     const slug = parsed.pathname;
+    // Skip non-game paths (e.g. schema definitions)
     if (slug.startsWith("/schemas/")) return;
     games.push({ id: slugToId(slug), title: slugToTitle(slug), slug });
   });
@@ -79,6 +81,7 @@ export async function fetchGamePdf(
   const $ = cheerio.load(html);
 
   const pdfsByLang: Record<string, string> = {};
+  // PDF links are <a class="dark-link"> inside <figcaption> elements. Title attribute is "En <FrenchLanguageName>".
   $("figcaption a.dark-link").each((_, el) => {
     const href = $(el).attr("href") ?? "";
     if (!href.endsWith(".pdf")) return;
@@ -110,21 +113,19 @@ export async function buildIndex(
     throw new Error("No boardgame sitemaps found in sitemap index");
 
   const limit = pLimit(5);
-  const allGames: GameEntry[] = [];
   let completed = 0;
 
-  await Promise.all(
+  const results = await Promise.all(
     sitemapUrls.map((url) =>
       limit(async () => {
         const games = await fetchGamesFromSitemap(url);
-        allGames.push(...games);
         completed++;
-        onProgress?.(
-          `Fetching sub-sitemap ${completed} of ${sitemapUrls.length}...`
-        );
+        onProgress?.(`Fetched sub-sitemap ${completed} of ${sitemapUrls.length}`);
+        return games;
       })
     )
   );
+  const allGames = results.flat();
 
   const seen = new Set<string>();
   const uniqueGames = allGames.filter((g) => {
