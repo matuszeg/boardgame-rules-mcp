@@ -66,8 +66,15 @@ export async function buildIndex(): Promise<GameIndex> {
     allGames.push(...games);
   }
 
+  const seen = new Set<string>();
+  const uniqueGames = allGames.filter((g) => {
+    if (seen.has(g.id)) return false;
+    seen.add(g.id);
+    return true;
+  });
+
   return {
     builtAt: new Date().toISOString(),
-    games: allGames,
+    games: uniqueGames,
   };
 }
