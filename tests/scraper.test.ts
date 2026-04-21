@@ -86,3 +86,12 @@ describe("fetchGamePdf", () => {
     );
   });
 });
+
+describe("buildIndex concurrency", () => {
+  it("emits progress messages during index build", async () => {
+    const messages: string[] = [];
+    const index = await buildIndex((msg) => messages.push(msg));
+    expect(messages.some((m) => m.includes("Fetching sitemap"))).toBe(true);
+    expect(messages.some((m) => m.includes("games"))).toBe(true);
+  });
+});
