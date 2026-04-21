@@ -127,8 +127,8 @@ export async function buildIndex(): Promise<GameIndex> {
 
   const seen = new Set<string>();
   const uniqueGames = allGames.filter((g) => {
-    if (seen.has(g.id)) return false;
-    seen.add(g.id);
+    if (seen.has(g.slug)) return false;
+    seen.add(g.slug);
     return true;
   });
 

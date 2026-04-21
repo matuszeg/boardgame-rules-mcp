@@ -134,14 +134,27 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     if (!gameId) throw new Error("game_id is required");
 
     const index = await loadIndex();
-    const game = index?.games.find((g) => g.id === gameId);
+    if (!index) {
+      throw new Error(
+        `No game index found. Run search_rulebook first to build the index.`
+      );
+    }
+    const game = index.games.find((g) => g.id === gameId);
     if (!game) {
       throw new Error(
         `Game "${gameId}" not found in index. Run search_rulebook first, or refresh_index if the game is new.`
       );
     }
 
-    const { pdfUrl } = await fetchGamePdf(game.slug, language);
+    let pdfUrl: string;
+    try {
+      const pdfResult = await fetchGamePdf(game.slug, language);
+      pdfUrl = pdfResult.pdfUrl;
+    } catch (err) {
+      return {
+        content: [{ type: "text", text: `Could not get PDF: ${(err as Error).message}` }],
+      };
+    }
     const result = await getRulebook(pdfUrl, gameId, language);
 
     return {
