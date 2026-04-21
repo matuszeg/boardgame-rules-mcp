@@ -228,15 +228,23 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     if (!game)
       throw new Error(`Game "${gameId}" not found in index.`);
 
+    const currentIndex = index; // captured non-null GameIndex
     const getText = async () => {
       const pdfResult = await fetchGamePdf(game.slug, language);
-      index = updateGameLanguages(index!, gameId, pdfResult.availableLanguages);
-      await saveIndex(index);
+      const updatedIndex = updateGameLanguages(currentIndex, gameId, pdfResult.availableLanguages);
+      await saveIndex(updatedIndex);
       const result = await getRulebook(pdfResult.pdfUrl, gameId, language);
       return result.text;
     };
 
-    const response = await getRulesSummaryResponse(gameId, language, schema, getText);
+    let response;
+    try {
+      response = await getRulesSummaryResponse(gameId, language, schema, getText);
+    } catch (err) {
+      return {
+        content: [{ type: "text", text: `Could not fetch rulebook: ${(err as Error).message}` }],
+      };
+    }
     return {
       content: [
         {

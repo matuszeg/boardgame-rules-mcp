@@ -15,7 +15,7 @@ export async function getRulesSummaryResponse(
   gameId: string,
   language: string,
   schema: string,
-  getText: (gameId: string, language: string) => Promise<string>
+  getText: () => Promise<string>
 ): Promise<SummaryResponse> {
   const cachePath = summaryPath(gameId, language, schema);
 
@@ -25,7 +25,7 @@ export async function getRulesSummaryResponse(
   }
 
   const [text, schemaDef] = await Promise.all([
-    getText(gameId, language),
+    getText(),
     loadSchema(schema),
   ]);
 
