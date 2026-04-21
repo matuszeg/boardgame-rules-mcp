@@ -8,7 +8,8 @@ export interface SearchResult {
 
 export function searchGames(
   games: GameEntry[],
-  query: string
+  query: string,
+  language?: string
 ): SearchResult[] {
   const fuse = new Fuse(games, {
     keys: ["title"],
@@ -18,8 +19,13 @@ export function searchGames(
 
   return fuse
     .search(query, { limit: 10 })
-    .map((result) => ({
-      game_id: result.item.id,
-      title: result.item.title,
+    .filter(({ item }) => {
+      if (!language) return true;
+      if (!item.languages) return true; // unknown — include optimistically
+      return item.languages.includes(language);
+    })
+    .map(({ item }) => ({
+      game_id: item.id,
+      title: item.title,
     }));
 }

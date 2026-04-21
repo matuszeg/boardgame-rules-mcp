@@ -48,3 +48,29 @@ describe("searchGames", () => {
     expect(results[0]).toHaveProperty("title");
   });
 });
+
+describe("searchGames with language filter", () => {
+  it("includes games with no language data when language specified", () => {
+    const games: GameEntry[] = [
+      { id: "catan", title: "Catan", slug: "/catan" }, // no languages field
+    ];
+    const results = searchGames(games, "Catan", "de");
+    expect(results).toHaveLength(1);
+  });
+
+  it("excludes games that explicitly do not have the requested language", () => {
+    const games: GameEntry[] = [
+      { id: "catan", title: "Catan", slug: "/catan", languages: ["en", "fr"] },
+    ];
+    const results = searchGames(games, "Catan", "de");
+    expect(results).toHaveLength(0);
+  });
+
+  it("includes games that have the requested language", () => {
+    const games: GameEntry[] = [
+      { id: "catan", title: "Catan", slug: "/catan", languages: ["en", "de"] },
+    ];
+    const results = searchGames(games, "Catan", "de");
+    expect(results).toHaveLength(1);
+  });
+});
