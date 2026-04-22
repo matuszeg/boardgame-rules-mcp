@@ -1,5 +1,5 @@
 import { promises as fs } from "fs";
-import Ajv2020 from "ajv/dist/2020.js";
+import Ajv2020Pkg from "ajv/dist/2020.js";
 import { summaryPath, isCacheFileStale, ensureDirs } from "./cache.js";
 import { loadSchema } from "./schema.js";
 
@@ -42,13 +42,15 @@ export async function submitRulesSummary(
   data: unknown
 ): Promise<SubmitResult> {
   const schemaDef = await loadSchema(schema);
-  const ajv = new Ajv2020({ strict: false });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const ajv = new (Ajv2020Pkg as any)({ strict: false });
   const validate = ajv.compile(schemaDef);
   const valid = validate(data);
 
   if (!valid) {
     const errors = (validate.errors ?? []).map(
-      (e) => `${e.instancePath || "root"}: ${e.message}`
+      (e: { instancePath?: string; message?: string }) =>
+        `${e.instancePath || "root"}: ${e.message ?? "invalid"}`
     );
     return { valid: false, errors };
   }

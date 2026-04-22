@@ -2,6 +2,7 @@
   "name": "boardgame-rules-mcp",
   "version": "0.2.1",
   "description": "MCP server for searching and reading board game rulebooks from 1jour-1jeu.com",
+  "type": "module",
   "main": "dist/index.js",
   "bin": {
     "boardgame-rules-mcp": "dist/index.js"
@@ -21,7 +22,7 @@
     "cheerio": "^1.0.0",
     "env-paths": "^2.2.1",
     "fuse.js": "^7.0.0",
-    "p-limit": "^3.1.0",
+    "p-limit": "^7.3.0",
     "pdf-parse": "^1.1.1"
   },
   "devDependencies": {
