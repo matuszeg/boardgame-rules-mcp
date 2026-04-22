@@ -1,10 +1,12 @@
 import * as cheerio from "cheerio";
+import pLimit from "p-limit";
+import { fetchWithRetry } from "./fetch.js";
 import { GameEntry, GameIndex } from "./cache.js";
 
 const BASE_URL = "https://en.1jour-1jeu.com";
 const GAME_PAGE_BASE_URL = "https://www.1jour-1jeu.com";
 
-// Map French language names (used in title attributes) to ISO 639-1 codes
+// Map French language names (used in title attributes on the site) to ISO 639-1 codes
 const FRENCH_LANG_NAME_TO_CODE: Record<string, string> = {
   Français: "fr",
   Anglais: "en",
@@ -28,7 +30,7 @@ export function slugToId(slug: string): string {
 }
 
 async function fetchBoardgameSitemapUrls(): Promise<string[]> {
-  const res = await fetch(`${BASE_URL}/sitemap.xml`);
+  const res = await fetchWithRetry(`${BASE_URL}/sitemap.xml`);
   if (!res.ok) throw new Error(`Sitemap fetch failed: ${res.status}`);
   const xml = await res.text();
   const $ = cheerio.load(xml, { xmlMode: true });
@@ -46,7 +48,7 @@ async function fetchBoardgameSitemapUrls(): Promise<string[]> {
 }
 
 async function fetchGamesFromSitemap(url: string): Promise<GameEntry[]> {
-  const res = await fetch(url);
+  const res = await fetchWithRetry(url);
   if (!res.ok) throw new Error(`Sitemap fetch failed: ${res.status}`);
   const xml = await res.text();
   const $ = cheerio.load(xml, { xmlMode: true });
@@ -57,11 +59,7 @@ async function fetchGamesFromSitemap(url: string): Promise<GameEntry[]> {
     const slug = parsed.pathname;
     // Skip non-game paths (e.g. schema definitions)
     if (slug.startsWith("/schemas/")) return;
-    games.push({
-      id: slugToId(slug),
-      title: slugToTitle(slug),
-      slug,
-    });
+    games.push({ id: slugToId(slug), title: slugToTitle(slug), slug });
   });
   return games;
 }
@@ -76,54 +74,58 @@ export async function fetchGamePdf(
   language: string
 ): Promise<GamePdfResult> {
   const url = `${GAME_PAGE_BASE_URL}${slug}`;
-  const res = await fetch(url);
+  const res = await fetchWithRetry(url);
   if (!res.ok)
     throw new Error(`Game page fetch failed: ${res.status} — ${url}`);
   const html = await res.text();
   const $ = cheerio.load(html);
 
-  // PDF links are <a class="dark-link"> inside <figcaption> elements.
-  // The title attribute is "En <FrenchLanguageName>", e.g. "En Anglais".
   const pdfsByLang: Record<string, string> = {};
+  // PDF links are <a class="dark-link"> inside <figcaption> elements. Title attribute is "En <FrenchLanguageName>".
   $("figcaption a.dark-link").each((_, el) => {
     const href = $(el).attr("href") ?? "";
     if (!href.endsWith(".pdf")) return;
     const title = $(el).attr("title") ?? "";
-    // title format: "En Français", "En Anglais", etc.
     const frenchName = title.startsWith("En ") ? title.slice(3) : "";
     const langCode = FRENCH_LANG_NAME_TO_CODE[frenchName];
-    if (langCode && !pdfsByLang[langCode]) {
-      // Keep the first PDF found per language (there can be multiple editions)
-      pdfsByLang[langCode] = href;
-    }
+    if (langCode && !pdfsByLang[langCode]) pdfsByLang[langCode] = href;
   });
 
   const availableLanguages = Object.keys(pdfsByLang);
-  if (availableLanguages.length === 0) {
+  if (availableLanguages.length === 0)
     throw new Error(`No PDF links found on page: ${url}`);
-  }
 
   const pdfUrl = pdfsByLang[language];
-  if (!pdfUrl) {
+  if (!pdfUrl)
     throw new Error(
       `Language "${language}" not available. Available: ${availableLanguages.join(", ")}`
     );
-  }
 
   return { pdfUrl, availableLanguages };
 }
 
-export async function buildIndex(): Promise<GameIndex> {
+export async function buildIndex(
+  onProgress?: (msg: string) => void
+): Promise<GameIndex> {
+  onProgress?.("Fetching sitemap index...");
   const sitemapUrls = await fetchBoardgameSitemapUrls();
-  if (sitemapUrls.length === 0) {
+  if (sitemapUrls.length === 0)
     throw new Error("No boardgame sitemaps found in sitemap index");
-  }
 
-  const allGames: GameEntry[] = [];
-  for (const url of sitemapUrls) {
-    const games = await fetchGamesFromSitemap(url);
-    allGames.push(...games);
-  }
+  const limit = pLimit(5);
+  let completed = 0;
+
+  const results = await Promise.all(
+    sitemapUrls.map((url) =>
+      limit(async () => {
+        const games = await fetchGamesFromSitemap(url);
+        completed++;
+        onProgress?.(`Fetched sub-sitemap ${completed} of ${sitemapUrls.length}`);
+        return games;
+      })
+    )
+  );
+  const allGames = results.flat();
 
   const seen = new Set<string>();
   const uniqueGames = allGames.filter((g) => {
@@ -132,8 +134,7 @@ export async function buildIndex(): Promise<GameIndex> {
     return true;
   });
 
-  return {
-    builtAt: new Date().toISOString(),
-    games: uniqueGames,
-  };
+  onProgress?.(`Index built: ${uniqueGames.length} games`);
+
+  return { builtAt: new Date().toISOString(), games: uniqueGames };
 }

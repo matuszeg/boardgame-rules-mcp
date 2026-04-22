@@ -86,3 +86,15 @@ describe("fetchGamePdf", () => {
     );
   });
 });
+
+describe("buildIndex concurrency", () => {
+  it("emits progress messages during index build", async () => {
+    const messages: string[] = [];
+    const index = await buildIndex((msg) => messages.push(msg));
+    expect(messages[0]).toBe("Fetching sitemap index...");
+    expect(messages.at(-1)).toMatch(/^Index built: \d+ games$/);
+    // The MSW fixture has 1 sub-sitemap, so exactly 1 "Fetched sub-sitemap" message
+    expect(messages.filter((m) => m.startsWith("Fetched sub-sitemap"))).toHaveLength(1);
+    expect(index.games.length).toBeGreaterThan(0);
+  });
+});

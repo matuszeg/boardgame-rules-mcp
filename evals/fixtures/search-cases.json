@@ -1,0 +1,42 @@
+[
+  {
+    "query": "Catan",
+    "expected": "2019-catan-starfarers"
+  },
+  {
+    "query": "katan",
+    "expected": "2013-katana"
+  },
+  {
+    "query": "ticket to ride",
+    "expected": "2004-ticket-to-ride"
+  },
+  {
+    "query": "aventuriers du rail",
+    "expected": "2013-les-aventuriers-du-rail"
+  },
+  {
+    "query": "pandemic",
+    "expected": "2018-pandemic"
+  },
+  {
+    "query": "pandemc",
+    "expected": "2018-pandemic"
+  },
+  {
+    "query": "carcassonne",
+    "expected": "2022-carcassonne"
+  },
+  {
+    "query": "7 wonders",
+    "expected": "2020-7-wonders"
+  },
+  {
+    "query": "Terraforming Mars",
+    "expected": "2016-terraforming-mars"
+  },
+  {
+    "query": "Codenames",
+    "expected": "2016-codenames"
+  }
+]

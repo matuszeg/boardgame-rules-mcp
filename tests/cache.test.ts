@@ -16,6 +16,9 @@ import {
   textPath,
   loadIndex,
   saveIndex,
+  summaryPath,
+  isCacheFileStale,
+  updateGameLanguages,
 } from "../src/cache";
 import type { GameIndex } from "../src/cache";
 
@@ -75,5 +78,48 @@ describe("loadIndex / saveIndex", () => {
     await saveIndex(index);
     const loaded = await loadIndex();
     expect(loaded).toEqual(index);
+  });
+});
+
+describe("summaryPath", () => {
+  it("returns expected path format", () => {
+    const result = summaryPath("catan", "en", "default");
+    expect(result).toContain("summaries");
+    expect(result).toMatch(/catan_en_default\.json$/);
+  });
+});
+
+describe("isCacheFileStale", () => {
+  it("returns false for a recently written file", async () => {
+    const p = path.join(TEST_CACHE_DIR, "test.txt");
+    await fs.mkdir(TEST_CACHE_DIR, { recursive: true });
+    await fs.writeFile(p, "data");
+    expect(await isCacheFileStale(p, 90)).toBe(false);
+  });
+
+  it("returns true for a non-existent file", async () => {
+    const p = path.join(TEST_CACHE_DIR, "missing.txt");
+    expect(await isCacheFileStale(p, 90)).toBe(true);
+  });
+});
+
+describe("updateGameLanguages", () => {
+  it("adds languages to the matching game entry", () => {
+    const index: GameIndex = {
+      builtAt: "2026-01-01T00:00:00.000Z",
+      games: [{ id: "catan", title: "Catan", slug: "/catan" }],
+    };
+    const updated = updateGameLanguages(index, "catan", ["en", "fr"]);
+    expect(updated.games[0].languages).toEqual(["en", "fr"]);
+    expect(index.games[0].languages).toBeUndefined(); // original not mutated
+  });
+
+  it("returns index unchanged when game_id is not found", () => {
+    const index: GameIndex = {
+      builtAt: "2026-01-01T00:00:00.000Z",
+      games: [{ id: "catan", title: "Catan", slug: "/catan" }],
+    };
+    const updated = updateGameLanguages(index, "unknown", ["en"]);
+    expect(updated.games[0].languages).toBeUndefined();
   });
 });
