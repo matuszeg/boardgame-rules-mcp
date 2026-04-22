@@ -1,6 +1,6 @@
 {
   "name": "boardgame-rules-mcp",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "MCP server for searching and reading board game rulebooks from 1jour-1jeu.com",
   "type": "module",
   "main": "dist/index.js",
