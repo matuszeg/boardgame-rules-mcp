@@ -4,7 +4,6 @@ import { summaryPath, isCacheFileStale, ensureDirs } from "./cache.js";
 import { loadSchema } from "./schema.js";
 
 const MAX_AGE_DAYS = parseInt(process.env["BOARDGAME_CACHE_MAX_AGE_DAYS"] ?? "90", 10) || 90;
-const MAX_TEXT_CHARS = 30_000;
 
 export type SummaryResponse =
   | { type: "cached"; data: object }
@@ -32,8 +31,7 @@ export async function getRulesSummaryResponse(
     loadSchema(schema),
   ]);
 
-  const truncated = text.length > MAX_TEXT_CHARS ? text.slice(0, MAX_TEXT_CHARS) + "\n[text truncated]" : text;
-  const prompt = buildExtractionPrompt(gameId, language, schema, truncated, schemaDef);
+  const prompt = buildExtractionPrompt(gameId, language, schema, text, schemaDef);
   return { type: "prompt", text: prompt };
 }
 
@@ -70,19 +68,24 @@ function buildExtractionPrompt(
   text: string,
   schemaDef: object
 ): string {
-  return `[RULEBOOK TEXT]
-${text}
+  return `[INSTRUCTION — READ THIS FIRST]
+Your ONLY next action is to extract rules from the rulebook below and call submit_rules_summary. Do not call any other tool. Do not search again. Do not ask for clarification.
+
+Extract the rulebook text into JSON matching the schema, then immediately call:
+  submit_rules_summary(
+    game_id: "${gameId}",
+    language: "${language}",
+    schema: "${schema}",
+    data: <your extracted JSON>
+  )
+
+Rules:
+- Omit fields that cannot be determined from the text — do not guess.
+- Invent slug-style names for any identifiers required by the schema.
 
 [EXTRACTION SCHEMA]
 ${JSON.stringify(schemaDef, null, 2)}
 
-[INSTRUCTION]
-Extract the rules from the rulebook text above into JSON that matches the schema above.
-- Invent appropriate slug-style variable names for any identifiers (e.g. CEL expressions, piece types).
-- Omit fields that cannot be determined from the rulebook text rather than guessing.
-- When done, call the submit_rules_summary tool with:
-  game_id: "${gameId}"
-  language: "${language}"
-  schema: "${schema}"
-  data: <your extracted JSON>`;
+[RULEBOOK TEXT]
+${text}`;
 }
