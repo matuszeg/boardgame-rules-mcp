@@ -11,7 +11,11 @@ const ajv = new Ajv({ strict: false });
 
 // Games to test extraction on — must already have summaries cached
 // Run: npm run evals (search evals first) then use Claude to run get_rules_summary on these games
-const EVAL_GAME_IDS = ["catan", "pandemic", "carcassonne"];
+const EVAL_GAME_IDS = [
+  "2012-the-settlers-of-catan",
+  "2018-pandemic",
+  "2022-carcassonne",
+];
 
 interface JudgeScore {
   scores: Record<string, number>;

@@ -4,6 +4,7 @@ import { summaryPath, isCacheFileStale, ensureDirs } from "./cache.js";
 import { loadSchema } from "./schema.js";
 
 const MAX_AGE_DAYS = parseInt(process.env["BOARDGAME_CACHE_MAX_AGE_DAYS"] ?? "90", 10) || 90;
+const MAX_TEXT_CHARS = 30_000;
 
 export type SummaryResponse =
   | { type: "cached"; data: object }
@@ -31,7 +32,8 @@ export async function getRulesSummaryResponse(
     loadSchema(schema),
   ]);
 
-  const prompt = buildExtractionPrompt(gameId, language, schema, text, schemaDef);
+  const truncated = text.length > MAX_TEXT_CHARS ? text.slice(0, MAX_TEXT_CHARS) + "\n[text truncated]" : text;
+  const prompt = buildExtractionPrompt(gameId, language, schema, truncated, schemaDef);
   return { type: "prompt", text: prompt };
 }
 
