@@ -3,7 +3,6 @@ import path from "path";
 import $RefParser from "@apidevtools/json-schema-ref-parser";
 
 const DEFAULT_SCHEMA = {
-  $schema: "https://json-schema.org/draft/2020-12/schema",
   title: "Board Game Rules Summary",
   type: "object",
   required: ["title", "players", "objective", "turn_structure", "winning_conditions"],
